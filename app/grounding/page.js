@@ -6,7 +6,7 @@ import Image from "next/image";
 const STEPS = [
   { key: "intro",  title: "그라운딩 (Grounding)",    subtitle: "!설명!", placeholder: "", targetCount: 0 },
   { key: "see5",   title: "무엇이 보이나요?",        subtitle: "아래의 사진에서 보이는 것 5가지를 골라주세요", placeholder: "예) 창문, 컵…", targetCount: 5 },
-  { key: "touch4", title: "만져지는 것 4가지",        subtitle: "촉각 미션을 따라 실제로 만져보세요",   placeholder: "", targetCount: 4 },
+  { key: "touch4", title: "만져지는 것 4가지",        subtitle: "미션을 따라 실제로 만져보고 감각을 느껴보세요",   placeholder: "", targetCount: 4 },
   { key: "hear3",  title: "무엇으로 들리나요?",        subtitle: "세 가지 소리 중 어떤 소리가 들리나요?", targetCount: 3 },
   { key: "smell2", title: "맡을 수 있는 냄새 2가지",  subtitle: "후각",   placeholder: "예) 커피향, 비누향…", targetCount: 2 },
   { key: "taste1", title: "맛볼 수 있는 것 1가지",    subtitle: "미각",   placeholder: "예) 물, 껌…", targetCount: 1 },
@@ -38,31 +38,32 @@ const HEAR_SOUNDS = [
 const LS_PREFIX = "grounding_541_";
 const lsKey = (key) => `${LS_PREFIX}${key}`;
 
-/* ---------- TOUCH4: 미션 컴포넌트 (JS) ---------- */
+/* ---------- TOUCH4: 미션 컴포넌트 ---------- */
 function TouchGroundingStep({ targetCount = 4, onAdd, onDone }) {
   const [ready, setReady] = useState(false);
   const [doneCount, setDoneCount] = useState(0);
-  const [current, setCurrent] = useState(null);
+  const [current, setCurrent] = useState(null); // { kind, title, hint }
   const [notes, setNotes] = useState("");
+  const recentKeyRef = useRef(null); // 직전 미션 key 저장(연속 중복 방지)
 
   const OBJECT_MISSIONS = [
-    { kind: "object", title: "딱딱한 것을 하나 찾아 만져보세요", hints: ["어떤 재질?", "표면은 매끈/거침?", "무게감은?"] },
-    { kind: "object", title: "차가운 것을 하나 찾아 만져보세요", hints: ["얼마나 차가워?", "촉감 변화 있어?", "물기/습기?"] },
-    { kind: "object", title: "부드러운 것을 하나 찾아 만져보세요", hints: ["보들보들/폭신?", "손가락 사이 감각?", "탄성은?"] },
-    { kind: "object", title: "거친 표면을 가진 것을 만져보세요", hints: ["까슬까슬 정도?", "패턴/요철?", "먼지/가루?"] },
-    { kind: "object", title: "따뜻한 것을 하나 잡아보세요", hints: ["열감 세기?", "지속/순간?", "안정감?"] },
-    { kind: "object", title: "말랑한 것을 눌러보세요", hints: ["탄력/반발?", "손자국 남아?", "소리/삐걱?"] },
-    { kind: "object", title: "매끈한 것을 문질러보세요", hints: ["미끄러움?", "균일/불균일?", "지문 느낌?"] },
-    { kind: "object", title: "나뭇결 있는 것을 만져보세요", hints: ["결 방향?", "마찰감?", "온도?"] },
+    { kind: "object", title: "딱딱한 것을 하나 찾아 만져보세요", hints: ["예) 어떤 재질인가요? 온도는 어떤가요?"] },
+    { kind: "object", title: "차가운 것을 하나 찾아 만져보세요", hints: ["예) 얼마나 차갑나요? 물기/습기가 있나요?"] },
+    { kind: "object", title: "부드러운 것을 하나 찾아 만져보세요", hints: ["예) 손가락 사이의 감각은 어떤가요?"] },
+    { kind: "object", title: "거친 표면을 가진 것을 만져보세요", hints: ["예) 얼마나 까슬하나요? 가루나 먼지가 느껴지나요?"] },
+    { kind: "object", title: "따뜻한 것을 하나 잡아보세요", hints: ["예) 얼마나 따뜻하나요?"] },
+    { kind: "object", title: "말랑한 것을 눌러보세요", hints: ["예) 탄성이 얼마나 강한가요?"] },
+    { kind: "object", title: "매끈한 것을 문질러보세요", hints: ["예) 표면의 온도는 어떤 가요?"] },
+    { kind: "object", title: "나뭇결 있는 것을 만져보세요", hints: ["예) 얼마나 울퉁불퉁 한가요?"] },
   ];
 
   const BODY_MISSIONS = [
-    { kind: "body", title: "손바닥을 맞잡아 압력을 천천히 느껴보세요", hints: ["압력 세기?", "따뜻함?", "맥동/긴장?"] },
-    { kind: "body", title: "손등을 반대 손가락으로 톡톡 두드려보세요", hints: ["진동/울림?", "피부 탄성?", "속도 변화?"] },
-    { kind: "body", title: "팔을 어깨에서 손목까지 천천히 쓸어내려보세요", hints: ["마찰/온도?", "솜털 느낌?", "속도 차이?"] },
-    { kind: "body", title: "엄지와 검지로 귓볼을 살짝 비벼보세요", hints: ["부드러움?", "따뜻함?", "통증 없이 가볍게"] },
-    { kind: "body", title: "양손으로 머리카락을 부드럽게 쓸어보세요", hints: ["거침/부드러움?", "정전기?", "압력 조절"] },
-    { kind: "body", title: "가슴 위에 손을 얹고 3회 호흡하며 온도를 느껴보세요", hints: ["상하 움직임?", "온기?", "천천히"] },
+    { kind: "body", title: "손바닥을 맞잡아 압력을 천천히 느껴보세요", hints: ["예) 압력이 얼마나 강한가요? "] },
+    { kind: "body", title: "손등을 반대 손가락으로 톡톡 두드려보세요", hints: ["예) 얼마나 탄력이 있나요?"] },
+    { kind: "body", title: "팔을 어깨에서 손목까지 천천히 쓸어내려보세요", hints: ["예) 간지럽게 느껴지나요?"] },
+    { kind: "body", title: "엄지와 검지로 귓볼을 살짝 비벼보세요", hints: ["예) 촉감이나 온도는 어떤가요?"] },
+    { kind: "body", title: "양손으로 머리카락을 부드럽게 쓸어보세요", hints: ["예) 머리카락의 촉감은 어떤가요?"] },
+    { kind: "body", title: "가슴 위에 손을 얹고 3회 호흡해 보세요", hints: ["예) 손의 높낮이가 얼마나 달라지나요?"] },
   ];
 
   useEffect(() => { setReady(true); }, []);
@@ -73,12 +74,27 @@ function TouchGroundingStep({ targetCount = 4, onAdd, onDone }) {
     }
   };
 
+  const missionKey = (m) => `${m.kind}:${m.title}`;
+
+  // 미션 및 힌트 1개 선택 (직전 미션과 title 연속 중복 방지)
   const drawMission = () => {
     if (!ready) return;
     const useBody = Math.random() < 0.5;
     const pool = useBody ? BODY_MISSIONS : OBJECT_MISSIONS;
-    const pick = pool[Math.floor(Math.random() * pool.length)];
-    setCurrent(pick);
+
+    let pick = null;
+    for (let i = 0; i < 10; i++) {
+      const cand = pool[Math.floor(Math.random() * pool.length)];
+      if (missionKey(cand) !== recentKeyRef.current) {
+        pick = cand;
+        break;
+      }
+    }
+    if (!pick) pick = pool[Math.floor(Math.random() * pool.length)]; // 안전장치
+
+    const randHint = pick.hints[Math.floor(Math.random() * pick.hints.length)];
+    setCurrent({ kind: pick.kind, title: pick.title, hint: randHint });
+    recentKeyRef.current = missionKey(pick); // 직전 키 기록
     setNotes("");
   };
 
@@ -152,50 +168,48 @@ function TouchGroundingStep({ targetCount = 4, onAdd, onDone }) {
           {current.title}
         </h3>
 
-        {/* 힌트 */}
-        <ul className="mt-3 grid gap-2 text-sm text-gray-700">
-          {current.hints.map((h, i) => (
-            <li key={i} className="flex items-start gap-2">
-              <span aria-hidden className="mt-1 h-1.5 w-1.5 rounded-full bg-gray-400" />
-              {h}
-            </li>
-          ))}
-        </ul>
-
-        {/* 감각 기록 인풋 */}
-        <label className="mt-4 block text-sm text-gray-500">느낀 촉감(짧게)</label>
+        {/* 힌트 리스트 제거 → placeholder로만 제공 */}
+        <label className="mt-4 block text-sm text-gray-500">느껴지는 것을 짧게 적어보세요<br />아래의 질문을 참고해도 좋습니다</label>
         <input
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="예) 차갑고 매끈함 / 보들보들하고 따뜻함"
+          placeholder={current.hint || "예)"}
           className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:border-gray-900"
           aria-label="느낀 촉감 입력"
         />
 
         {/* 액션 버튼 */}
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            onClick={onSkip}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
-          >
-            건너뛰기 / 다시 뽑기
-          </button>
-          <button
-            onClick={onCompleteOne}
-            className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
-          >
-            이 미션 완료
-          </button>
+        <div className="mt-4 grid grid-cols-3 items-center w-full">
+          {/* 왼쪽 */}
+          <div className="justify-self-start">
+            <button
+              onClick={onSkip}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 hover:bg-gray-100"
+            >
+              다시 뽑기
+            </button>
+          </div>
+
+          {/* 중앙 */}
+          <div className="justify-self-center">
+            <button
+              onClick={onCompleteOne}
+              className="align-middle rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
+            >
+              미션 완료
+            </button>
+          </div>
         </div>
       </div>
 
       {/* 보조 가이드 */}
       <p className="mt-4 text-xs leading-relaxed text-gray-500">
-        ※ 주변에 적절한 물건이 없을 땐, <span className="text-gray-800">손바닥 맞잡기, 손등 톡톡, 팔 쓸어내리기, 귓불 비비기</span> 같은 <span className="text-gray-800">손동작 미션</span>을 수행하세요. 안전하고 통증 없는 범위에서 천천히 진행합니다.
+        ※ 주변에 적절한 물건이 없을 땐, <br /> <span className="text-gray-800">손바닥 맞잡기, 손등 톡톡, 팔 쓸어내리기, 귓불 비비기</span> 등 <span className="text-gray-800"> <br />손동작 미션</span>을 수행하세요. <br />안전하고 통증 없는 범위에서 천천히 진행합니다.
       </p>
     </section>
   );
 }
+
 
 /* ---------- PAGE ---------- */
 export default function GroundingPage() {
