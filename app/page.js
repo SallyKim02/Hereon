@@ -6,7 +6,7 @@ export default function HomePage() {
       {/* 중앙 컨테이너 */}
       <div className="w-full max-w-5xl mx-auto px-6 flex flex-col items-center">
         <h1 className="mt-40 text-4xl font-bold text-black w-full text-center">
-          Panic Attack Helper
+          hereOn
         </h1>
 
         <div className="mt-24 flex justify-center items-center gap-32">
