@@ -14,8 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "심리코딩",
-  description: "생각 다루기 · CBT",
+  title: "Hereon",
 };
 
 export default function RootLayout({ children }) {
