@@ -147,8 +147,7 @@ export default function BreathingPage() {
         <div className="relative rounded-2xl shadow-lg border border-gray-200 p-8 text-center">
           {/* 헤더 */}
           <div className="flex items-start justify-between gap-4">
-            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-left">호흡 훈련</h1>
-
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-left">호흡 다루기</h1>
             <div className="flex flex-col items-end gap-2">
               <div className="inline-flex rounded-full border border-gray-300 overflow-hidden">
                 <button
@@ -279,15 +278,6 @@ export default function BreathingPage() {
               </button>
             </div>
           </section>
-
-          <div className="mt-8 w-full flex justify-center">
-            <a
-              href="/"
-              className="rounded-xl px-6 py-3 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition text-center"
-            >
-              메인으로 돌아가기
-            </a>
-          </div>
         </div>
       </div>
     </div>

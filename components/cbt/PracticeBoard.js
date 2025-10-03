@@ -216,16 +216,6 @@ export default function PracticeBoard() {
             다음 라운드
           </button>
         </div>
-
-        {/* 맨 아래 메인으로 이동 */}
-        <div className="mt-10 flex justify-center">
-          <Link
-            href="/cbt"
-            className="rounded-md bg-slate-900 text-white px-6 py-3 text-lg font-medium hover:opacity-90"
-          >
-            메인으로
-          </Link>
-        </div>
       </div>
 
     </div>

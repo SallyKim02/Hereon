@@ -69,12 +69,6 @@ export default function CBTInfoPage() {
             >
               CBT 카드로 돌아가기
             </a>
-            <a
-              href="/"
-              className="rounded-xl px-6 py-3 border border-gray-300 text-gray-600 hover:bg-gray-100 transition text-center"
-            >
-              메인으로 돌아가기
-            </a>
           </div>
         </div>
       </div>
