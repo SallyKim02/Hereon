@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { saveEntry } from "../../lib/cbt/storage";
-
+import Link from "next/link";
 /* ===== 옵션 ===== */
 const CATEGORY_OPTIONS = [
   { key: "relationship", label: "대인관계" },
@@ -273,12 +273,11 @@ export default function EntryForm() {
 
       {/* 하단 */}
       <div className="mt-6 flex justify-between">
-        <a
-          href="/cbt/history"
+        <Link href="/cbt/history"
           className="px-4 py-2 rounded-lg border border-neutral-300 hover:border-neutral-500 bg-white"
         >
           기록보기
-        </a>
+        </Link>
         <button
           type="button"
           onClick={handleSave}

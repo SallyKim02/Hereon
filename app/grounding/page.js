@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 /* ---------- Step specs ---------- */
 const STEPS = [
@@ -38,6 +39,27 @@ const HEAR_SOUNDS = [
 const LS_PREFIX = "grounding_541_";
 const lsKey = (key) => `${LS_PREFIX}${key}`;
 
+/* ---------- TOUCH4 미션 풀(컴포넌트 밖으로 이동해 stable) ---------- */
+const OBJECT_MISSIONS = [
+  { kind: "object", title: "딱딱한 것을 하나 찾아 만져보세요", hints: ["예) 어떤 재질인가요? 온도는 어떤가요?"] },
+  { kind: "object", title: "차가운 것을 하나 찾아 만져보세요", hints: ["예) 얼마나 차갑나요? 물기/습기가 있나요?"] },
+  { kind: "object", title: "부드러운 것을 하나 찾아 만져보세요", hints: ["예) 손가락 사이의 감각은 어떤가요?"] },
+  { kind: "object", title: "거친 표면을 가진 것을 만져보세요", hints: ["예) 얼마나 까슬하나요? 가루나 먼지가 느껴지나요?"] },
+  { kind: "object", title: "따뜻한 것을 하나 잡아보세요", hints: ["예) 얼마나 따뜻하나요?"] },
+  { kind: "object", title: "말랑한 것을 눌러보세요", hints: ["예) 탄성이 얼마나 강한가요?"] },
+  { kind: "object", title: "매끈한 것을 문질러보세요", hints: ["예) 표면의 온도는 어떤 가요?"] },
+  { kind: "object", title: "나뭇결 있는 것을 만져보세요", hints: ["예) 얼마나 울퉁불퉁 한가요?"] },
+];
+
+const BODY_MISSIONS = [
+  { kind: "body", title: "손바닥을 맞잡아 압력을 천천히 느껴보세요", hints: ["예) 압력이 얼마나 강한가요? "] },
+  { kind: "body", title: "손등을 반대 손가락으로 톡톡 두드려보세요", hints: ["예) 얼마나 탄력이 있나요?"] },
+  { kind: "body", title: "팔을 어깨에서 손목까지 천천히 쓸어내려보세요", hints: ["예) 간지럽게 느껴지나요?"] },
+  { kind: "body", title: "엄지와 검지로 귓볼을 살짝 비벼보세요", hints: ["예) 촉감이나 온도는 어떤가요?"] },
+  { kind: "body", title: "양손으로 머리카락을 부드럽게 쓸어보세요", hints: ["예) 머리카락의 촉감은 어떤가요?"] },
+  { kind: "body", title: "가슴 위에 손을 얹고 3회 호흡해 보세요", hints: ["예) 손의 높낮이가 얼마나 달라지나요?"] },
+];
+
 /* ---------- TOUCH4: 미션 컴포넌트 ---------- */
 function TouchGroundingStep({ targetCount = 4, onAdd, onDone }) {
   const [ready, setReady] = useState(false);
@@ -45,26 +67,6 @@ function TouchGroundingStep({ targetCount = 4, onAdd, onDone }) {
   const [current, setCurrent] = useState(null); // { kind, title, hint }
   const [notes, setNotes] = useState("");
   const recentKeyRef = useRef(null); // 직전 미션 key 저장(연속 중복 방지)
-
-  const OBJECT_MISSIONS = [
-    { kind: "object", title: "딱딱한 것을 하나 찾아 만져보세요", hints: ["예) 어떤 재질인가요? 온도는 어떤가요?"] },
-    { kind: "object", title: "차가운 것을 하나 찾아 만져보세요", hints: ["예) 얼마나 차갑나요? 물기/습기가 있나요?"] },
-    { kind: "object", title: "부드러운 것을 하나 찾아 만져보세요", hints: ["예) 손가락 사이의 감각은 어떤가요?"] },
-    { kind: "object", title: "거친 표면을 가진 것을 만져보세요", hints: ["예) 얼마나 까슬하나요? 가루나 먼지가 느껴지나요?"] },
-    { kind: "object", title: "따뜻한 것을 하나 잡아보세요", hints: ["예) 얼마나 따뜻하나요?"] },
-    { kind: "object", title: "말랑한 것을 눌러보세요", hints: ["예) 탄성이 얼마나 강한가요?"] },
-    { kind: "object", title: "매끈한 것을 문질러보세요", hints: ["예) 표면의 온도는 어떤 가요?"] },
-    { kind: "object", title: "나뭇결 있는 것을 만져보세요", hints: ["예) 얼마나 울퉁불퉁 한가요?"] },
-  ];
-
-  const BODY_MISSIONS = [
-    { kind: "body", title: "손바닥을 맞잡아 압력을 천천히 느껴보세요", hints: ["예) 압력이 얼마나 강한가요? "] },
-    { kind: "body", title: "손등을 반대 손가락으로 톡톡 두드려보세요", hints: ["예) 얼마나 탄력이 있나요?"] },
-    { kind: "body", title: "팔을 어깨에서 손목까지 천천히 쓸어내려보세요", hints: ["예) 간지럽게 느껴지나요?"] },
-    { kind: "body", title: "엄지와 검지로 귓볼을 살짝 비벼보세요", hints: ["예) 촉감이나 온도는 어떤가요?"] },
-    { kind: "body", title: "양손으로 머리카락을 부드럽게 쓸어보세요", hints: ["예) 머리카락의 촉감은 어떤가요?"] },
-    { kind: "body", title: "가슴 위에 손을 얹고 3회 호흡해 보세요", hints: ["예) 손의 높낮이가 얼마나 달라지나요?"] },
-  ];
 
   useEffect(() => { setReady(true); }, []);
 
@@ -77,7 +79,7 @@ function TouchGroundingStep({ targetCount = 4, onAdd, onDone }) {
   const missionKey = (m) => `${m.kind}:${m.title}`;
 
   // 미션 및 힌트 1개 선택 (직전 미션과 title 연속 중복 방지)
-  const drawMission = () => {
+  const drawMission = useCallback(() => {
     if (!ready) return;
     const useBody = Math.random() < 0.5;
     const pool = useBody ? BODY_MISSIONS : OBJECT_MISSIONS;
@@ -96,11 +98,11 @@ function TouchGroundingStep({ targetCount = 4, onAdd, onDone }) {
     setCurrent({ kind: pick.kind, title: pick.title, hint: randHint });
     recentKeyRef.current = missionKey(pick); // 직전 키 기록
     setNotes("");
-  };
+  }, [ready]);
 
   useEffect(() => {
     if (ready && !current) drawMission();
-  }, [ready, current]);
+  }, [ready, current, drawMission]);
 
   const progress = useMemo(
     () => Math.min(100, Math.round((doneCount / targetCount) * 100)),
@@ -210,7 +212,6 @@ function TouchGroundingStep({ targetCount = 4, onAdd, onDone }) {
   );
 }
 
-
 /* ---------- PAGE ---------- */
 export default function GroundingPage() {
   const [stepIndex, setStepIndex] = useState(0);
@@ -227,17 +228,26 @@ export default function GroundingPage() {
     done: [],
   });
 
-  /* 초기 로드: localStorage 복원 */
+  /* 초기 로드: localStorage 복원 (eslint-disable 제거) */
   useEffect(() => {
-    const loaded = { ...entries };
-    Object.keys(loaded).forEach((k) => {
+    const base = {
+      intro: [],
+      see5_labels: [],
+      see5_text: [],
+      touch4: [],
+      hear3: [],
+      smell2: [],
+      taste1: [],
+      done: [],
+    };
+    const loaded = { ...base };
+    Object.keys(base).forEach((k) => {
       try {
         const raw = localStorage.getItem(lsKey(k));
         if (raw) loaded[k] = JSON.parse(raw);
       } catch {}
     });
     setEntries(loaded);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const saveStep = (k, arr) => {
@@ -247,11 +257,11 @@ export default function GroundingPage() {
   const [text, setText] = useState("");
   const inputRef = useRef(null);
 
-  /* done 페이지 프리필 */
+  /* done 페이지 프리필 (정상 deps) */
   useEffect(() => {
     if (current.key === "done") setText(entries.done?.[0] || "");
     else setText("");
-  }, [stepIndex]); // eslint-disable-line
+  }, [current.key, entries.done]);
 
   const goNext = () => setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
   const goPrev = () => setStepIndex((i) => Math.max(i - 1, 0));
@@ -288,7 +298,7 @@ export default function GroundingPage() {
 
   useEffect(() => {
     if (current.key === "see5") setSeeImgIdx((prev) => pickRandomIdx(prev));
-  }, [stepIndex, seeMode]); // eslint-disable-line
+  }, [stepIndex, seeMode, current.key]);
 
   const toggleLabel = (label) => {
     if (current.key !== "see5" || seeMode !== "image") return;
@@ -355,7 +365,7 @@ export default function GroundingPage() {
       return prev;
     });
     setHearRound(0);
-  }, [stepIndex]); // eslint-disable-line
+  }, [current.key]);
 
   const currentHearIdx = hearSet[hearRound];
   const currentHear = currentHearIdx !== undefined ? HEAR_SOUNDS[currentHearIdx] : null;
@@ -447,7 +457,7 @@ export default function GroundingPage() {
         return (entries[s.key]?.length || 0) >= (s.targetCount || 0);
       }).length - 1
     );
-  }, [entries]); // eslint-disable-line
+  }, [entries]);
 
   /* ---------- touch4 저장 콜백 ---------- */
   const addTouchRecord = (rec) => {
@@ -463,7 +473,7 @@ export default function GroundingPage() {
         <div className="relative rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col items-center text-center">
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">{current.title}</h1>
           {current.subtitle && (
-            <p className="mt-3 text-base md:text-lg text-gray-600 whitespace-pre-wrap">{current.subtitle}</p>
+            <p className="mt-3 text-base md:text-lg text_GRAY-600 whitespace-pre-wrap">{current.subtitle}</p>
           )}
 
           {/* ---------- SEE5 ---------- */}
@@ -491,7 +501,7 @@ export default function GroundingPage() {
                   <button
                     onClick={() => switchSeeMode("image")}
                     className={`px-3 py-1.5 rounded-lg text-sm border ${
-                      seeMode === "image"
+                      (seeMode === "image")
                         ? "border-gray-900 bg-gray-900 text-white"
                         : "border-gray-300 text-gray-700 hover:bg-gray-100"
                     }`}
@@ -501,7 +511,7 @@ export default function GroundingPage() {
                   <button
                     onClick={() => switchSeeMode("text")}
                     className={`px-3 py-1.5 rounded-lg text-sm border ${
-                      seeMode === "text"
+                      (seeMode === "text")
                         ? "border-gray-900 bg-gray-900 text-white"
                         : "border-gray-300 text-gray-700 hover:bg-gray-100"
                     }`}
@@ -775,9 +785,9 @@ export default function GroundingPage() {
                   setEntries(nextEntries); saveStep("done", arr);
                 }}
               />
-              <a href="/" className="mt-6 rounded-xl px-6 py-3 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition">
+              <Link href="/" className="mt-6 rounded-xl px-6 py-3 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition">
                 메인으로 돌아가기
-              </a>
+              </Link>
             </div>
           )}
 

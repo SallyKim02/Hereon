@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 // app/cbtinfo/page.js
 export default function CBTInfoPage() {
   return (
@@ -63,12 +65,12 @@ export default function CBTInfoPage() {
 
           {/* Footer Navigation: CBT 카드 → 메인 순서와 호환되도록 반대 링크 제공 */}
           <div className="mt-10 w-full flex flex-col sm:flex-row gap-3 justify-center">
-            <a
+            <Link
               href="/cbtcard"
               className="rounded-xl px-6 py-3 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition text-center"
             >
               CBT 카드로 돌아가기
-            </a>
+            </Link>
           </div>
         </div>
       </div>

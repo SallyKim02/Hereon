@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function BreathingPage() {
   const [inhale, setInhale] = useState(4);
@@ -24,6 +24,12 @@ export default function BreathingPage() {
   const [circleTransitionSec, setCircleTransitionSec] = useState(0);
 
   const [elapsedSec, setElapsedSec] = useState(0);
+
+  // 인터벌 관리용 ref
+  const tickIvRef = useRef(null);
+  const elapsedIvRef = useRef(null);
+  const tRef = useRef(0);
+
   const formatTime = (s) => {
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
@@ -33,26 +39,35 @@ export default function BreathingPage() {
     return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
   };
 
+  // 경과시간 타이머
   useEffect(() => {
-    if (!isRunning) return;
-    const iv = setInterval(() => setElapsedSec((v) => v + 1), 1000);
-    return () => clearInterval(iv);
+    if (isRunning) {
+      if (elapsedIvRef.current) clearInterval(elapsedIvRef.current);
+      elapsedIvRef.current = setInterval(() => {
+        setElapsedSec((v) => v + 1);
+      }, 1000);
+    }
+    return () => {
+      if (elapsedIvRef.current) {
+        clearInterval(elapsedIvRef.current);
+        elapsedIvRef.current = null;
+      }
+    };
   }, [isRunning]);
 
+  // 호흡 사이클 tick
   useEffect(() => {
     if (!isRunning || total <= 0) return;
 
-    let t = 0;
+    tRef.current = 0;
     setPhase("들이마시기");
     setCount(inhale);
     setProgress(0);
-
     setCircleTransitionSec(0);
     setCircleScale(MIN_SCALE);
 
-    const iv = setInterval(() => {
-      t = (t + 1) % total;
-
+    const updateTick = () => {
+      const t = tRef.current % total;
       if (t < inhale) {
         setPhase("들이마시기");
         setCount(inhale - t);
@@ -67,11 +82,22 @@ export default function BreathingPage() {
         const e = t - (inhale + hold);
         setProgress(100 - ((e + 1) / exhale) * 100);
       }
-    }, 1000);
+      tRef.current = (tRef.current + 1) % total;
+    };
 
-    return () => clearInterval(iv);
+    if (tickIvRef.current) clearInterval(tickIvRef.current);
+    updateTick(); // 첫 tick 즉시 실행
+    tickIvRef.current = setInterval(updateTick, 1000);
+
+    return () => {
+      if (tickIvRef.current) {
+        clearInterval(tickIvRef.current);
+        tickIvRef.current = null;
+      }
+    };
   }, [isRunning, total, inhale, hold, exhale]);
 
+  // 원 애니메이션
   useEffect(() => {
     if (!isRunning || total <= 0) return;
 
@@ -87,8 +113,9 @@ export default function BreathingPage() {
     }
   }, [phase, inhale, exhale, isRunning, total]);
 
+  // 프리셋 적용
   const applyPreset = (type) => {
-    if (type === "4-2-4") {
+    if (type === "4-2-5") {
       const ni = 4, nh = 2, ne = 5;
       setInhale(ni); setHold(nh); setExhale(ne);
       setInhaleStr(String(ni)); setHoldStr(String(nh)); setExhaleStr(String(ne));
@@ -258,7 +285,7 @@ export default function BreathingPage() {
 
             <div className="mt-5 flex flex-wrap gap-2">
               <button
-                onClick={() => applyPreset("4-2-4")}
+                onClick={() => applyPreset("4-2-5")}
                 className="rounded-xl px-4 py-2 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition"
               >
                 4-2-5
