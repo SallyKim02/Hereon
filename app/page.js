@@ -12,7 +12,7 @@ export default function HomePage() {
         <div className="mt-24 flex justify-center items-center gap-32">
           <CircleLink href="/breathing" label="호흡 훈련" />
           <CircleLink href="/grounding" label="감각 그라운딩" />
-          <CircleLink href="/cbtcard" label="CBT 카드" />
+          <CircleLink href="/cbt" label="CBT 카드" />
         </div>
       </div>
     </main>
