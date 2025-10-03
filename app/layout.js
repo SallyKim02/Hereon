@@ -13,8 +13,32 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+//  사이트 메타데이터
 export const metadata = {
-  title: "Hereon",
+  title: "HereOn",
+  description: "언제든 간단하게 HereOn",
+  openGraph: {
+    title: "HereOn",
+    description: "언제든 간단하게 HereOn",
+    url: "https://HereOn.vercel.app",
+    siteName: "HereOn",
+    images: [
+      {
+        url: "/green.png", // public 폴더에 green.png 넣어두면 자동 제공됨
+        width: 1200,
+        height: 630,
+        alt: "HereOn 미리보기 이미지",
+      },
+    ],
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HereOn | Panic Attack Helper",
+    description: "언제든 간단하게 HereOn",
+    images: ["/green.png"],
+  },
 };
 
 export default function RootLayout({ children }) {
